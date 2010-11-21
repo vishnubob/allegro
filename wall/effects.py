@@ -332,7 +332,7 @@ class RotateEffect(Effect):
 
 class FadeRotateEffect(RotateEffect):
     def run(self):
-        hue_step = 1 / 64.0
+        hue_step = 1 / float(self.wall.width * self.wall.height)
         cache_list = []
         cache_cnt = random.randint(5,15)
         offset_step = 1.0 / cache_cnt
@@ -362,4 +362,4 @@ class FadeRotateEffect(RotateEffect):
         fi = FadeIter(wall, wall2, ttl)
         fi.run()
 
-Effects = [MatrixEffect, WindEffect, RotateEffect]
+Effects = [MatrixEffect, WindEffect, RotateEffect, FadeRotateEffect]
