@@ -233,7 +233,8 @@ class RotateEffect(Effect):
     Axis = [Horz, Vert]
 
     def _init(self, kw):
-        self.cursor = (random.randint(0, 7), random.randint(0, 7))
+        self.cursor = (random.randint(0, self.wall.width - 1),
+                       random.randint(0, self.wall.height - 1))
         self.seed_dir_map()
         self.map_rotate()
 
@@ -255,16 +256,16 @@ class RotateEffect(Effect):
         return next_vector
 
     def clip_vector(self, vector):
-        if vector[0] < 0 or vector[0] > 7:
+        if vector[0] < 0 or vector[0] > self.wall.width - 1:
             return True
-        if vector[1] < 0 or vector[1] > 7:
+        if vector[1] < 0 or vector[1] > self.wall.height - 1:
             return True
         return False
 
     def debug_draw(self):
         canvas = []
-        for y in range(8):
-            row = ['.'] * 8
+        for y in range(self.wall.height):
+            row = ['.'] * self.wall.width
             canvas.append(row)
         for pixel in self.draw_list:
             canvas[pixel[1]][pixel[0]] = '#'
@@ -274,7 +275,7 @@ class RotateEffect(Effect):
             time.sleep(.03)
 
     def run(self):
-        hue_step = 1 / 64.0
+        hue_step = 1 / float(self.wall.width * self.wall.height)
         offset = random.random()
         cnt = 0
         cache = []
@@ -361,4 +362,4 @@ class FadeRotateEffect(RotateEffect):
         fi = FadeIter(wall, wall2, ttl)
         fi.run()
 
-Effects = [MatrixEffect, WindEffect]
+Effects = [MatrixEffect, WindEffect, RotateEffect]

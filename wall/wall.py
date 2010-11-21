@@ -43,7 +43,7 @@ class Wall(object):
 
     def copy(self, clear=False):
         chain2 = self.chain.copy(clear)
-        return self.__class__(chain2, self.debug, self.gui, True)
+        return self.__class__(self.width, self.height, chain2, self.debug, self.gui, True)
 
     def __len__(self):
         return len(self.chain)
