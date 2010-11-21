@@ -59,6 +59,11 @@ class Wall(object):
         Turn x and y indices into a matrix into the corresponding pixel in the
         linear chain that actually describes the lights.
 
+        x: integer
+        y: integer
+
+        Returns: the ShiftBright at that location
+
         The assumed light configuration is a snake, ie:
 
         1 -- 2 -- 3

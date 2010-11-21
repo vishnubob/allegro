@@ -35,27 +35,49 @@ class TestEffect(Effect):
                     self.wall.clear()
 
 class MatrixEffect(Effect):
+    """
+    Visualize the classic green trickle down Matrix effect.
+
+    TODO: generalize to any direction.
+    """
     class Column(object):
-        def __init__(self):
+        def __init__(self, wall):
+            self.wall = wall
             self.cache = []
-            self.tail = random.randint(3, 15)
-            self.vector = (0, max(.5, random.random() * 2))
-            self.pos = (random.randint(0, 7), random.randint(-15, 0))
+            # Tail must be at least 1 pixel long
+            self.tail = max(1, random.randint(
+                    self.wall.height / 2, self.wall.height * 2))
+            # Get a position somewhere above the wall (so it can trickle down
+            # onto the wall)
+            self.pos = (random.randint(0, self.wall.width - 1),
+                        random.randint(-(self.wall.height * 2), 0))
             self.green = random.randint(900, 1023)
 
         def step(self):
-            self.cache.append(map(int, self.pos))
+            """
+            Advance the location of the head of the column and all pixels in the
+            tail.
+            """
+            self.cache.append(self.pos)
             self.cache = self.cache[-self.tail:]
-            self.pos = [self.pos[axis] + self.vector[axis] for axis in range(2)]
+            self.pos = [self.pos[0], self.pos[1] + 1]
 
         def draw(self, wall):
+            """
+            Set the pixel colors in this column for this step.
+
+            Returns the number of pixels making up this column that were
+            actually within the scope of the wall.
+            """
             draw_cnt = 0
+            # Prepare the tail colors
             for idx, pos in enumerate(self.cache):
                 pixel = wall.pixel(*pos)
                 if pixel:
                     green = float(self.green) * (float(idx) / self.tail)
                     pixel.rgb = (0, green, 0)
                     draw_cnt += 1
+            # Prepare the head color
             pixel = wall.pixel(*self.pos)
             if pixel:
                 draw_cnt += 1
@@ -66,14 +88,19 @@ class MatrixEffect(Effect):
         self.speed = kw.get('speed', random.random())
 
     def run(self):
+        # pick how many Matrix columns we'll draw
         col_cnt = random.randint(15, 30)
         cols = []
         for col_idx in range(col_cnt):
-            col = self.Column()
+            col = self.Column(self.wall)
             cols.append(col)
         self.draw(cols)
 
     def draw(self, cols):
+        """
+        Draw the advancing columns until no parts of any columns are left on the
+        wall.
+        """
         timeout = 4
         drawing = 0
         while drawing or timeout:
@@ -323,4 +350,4 @@ class FadeRotateEffect(RotateEffect):
         fi = FadeIter(wall, wall2, ttl)
         fi.run()
 
-Effects = [TestEffect]
+Effects = [MatrixEffect]
