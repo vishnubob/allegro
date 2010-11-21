@@ -169,7 +169,7 @@ if __name__ == '__main__':
             run(opts, args)
         except KeyboardInterrupt:
             break
-        except:
+        except Exception:
             txt = ''
             txt += time.strftime("%c") + '\n'
             txt = traceback.format_exc() + '\n'

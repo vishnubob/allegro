@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import sys
 import time
 import random
 import traceback
@@ -16,6 +17,12 @@ class DebugWatcher(object):
         return (random.choice([1, -1]), random.random())
 
 class Watcher(object):
+    def __init__(self):
+        if not filter(lambda x: x.find("video") != -1, os.listdir("/dev")):
+            print "You have no video devices mounted."
+            print "Did you mean to pass -R?"
+            sys.exit(1)
+
     def mtrack(self, cam):
         fn1 = "/tmp/cam-%d_1.jpg" % cam
         fn2 = "/tmp/cam-%d_2.jpg" % cam
