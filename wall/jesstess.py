@@ -14,51 +14,93 @@ class Mondrian(Effect):
         self.colors = [red, blue, yellow, black]
 
     def drawLine(self, color):
+        """
+        Draw a line of a given color that is randomly vertical or horizontal and
+        takes up the full width or height of the wall.
+
+        color: a 3-element tuple of hsv values
+        """
         vert = random.choice((0, 1))
 
         if vert:
-            x = random.randint(0, 7)
-            y = random.choice((0, 7))
+            # The line starts at either the top or bottom of the wall.
+            x = random.randint(0, self.wall.width - 1)
+            y = random.choice((0, self.wall.height - 1))
         else:
-            x = random.choice((0, 7))
-            y = random.randint(0, 7)
+            # The line starts at either the left or right side of the wall.
+            x = random.choice((0, self.wall.width - 1))
+            y = random.randint(0, self.wall.height - 1)
 
         if vert and y:
-            self.vert_line(color, x, y, -1) # line up
+            # Vertical line drawn up
+            self.vert_line(color, x, y, -1)
         elif vert:
-            self.vert_line(color, x, y, 1) # line up
+            # Vertical line drawn down
+            self.vert_line(color, x, y, 1)
         elif x:
-            self.horiz_line(color, x, y, -1) # line up
+            # Horizontal line drawn left
+            self.horiz_line(color, x, y, -1)
         else:
-            self.horiz_line(color, x, y, 1) # line down            
+            # Horizontal line drwan right
+            self.horiz_line(color, x, y, 1)
 
     def vert_line(self, color, x, y, direction):
-        for i in range(8):
-            pixel = self.wall.pixel(x, y + i*direction)
+        """
+        Draw a vertical line in the specified direction and color.
+
+        color: a three-element tuple of hsv values
+        x: integer
+        y: integer
+        direction: integer, either -1 or 1. -1 means draw up, 1 means draw
+        down.
+        """
+        for i in range(self.wall.height):
+            pixel = self.wall.pixel(x, y + i * direction)
             pixel.hsv = color
             self.wall.draw()
 
     def horiz_line(self, color, x, y, direction):
-        for i in range(8):
-            pixel = self.wall.pixel(x + i*direction, y)
+        """
+        Draw a horizontal line in the specified direction and color.
+
+        color: a three-element tuple of hsv values
+        x: integer
+        y: integer
+        direction: integer, either -1 or 1. -1 means draw left, 1 means draw
+        right.
+        """
+        for i in range(self.wall.width):
+            pixel = self.wall.pixel(x + i * direction, y)
             pixel.hsv = color
             self.wall.draw()
 
     def drawSquare(self, color):
-        size = random.choice((2, 3, 4))
-        corner_x = random.randint(0, 5)
-        corner_y = random.randint(0, 5)
+        """
+        Draw a square of the specified color. Some of the square may end up off
+        the wall. The size is random within limits based on the wall size.
+        """
+        # The square is at least 2 x 2
+        max_size = max(3, int(max(self.wall.width, self.wall.height) *.75))
+        size = random.choice(tuple(range(2, max_size)))
+
+        # The upper-left corner of the square is somewhere outside the lower
+        # right corner, to make it more likely that most of the square is on the
+        # wall.
+        corner_x = random.randint(0, int(self.wall.width * .75))
+        corner_y = random.randint(0, int(self.wall.height * .75))
         
         for x in range(corner_x, corner_x + size + 1):
             for y in range(corner_y, corner_y + size + 1):
-                if x < 8 and y < 8:
+                if x < self.wall.width and y < self.wall.height:
                     pixel = self.wall.pixel(x, y)
                     pixel.hsv = color
         self.wall.draw()
 
     def run(self):
+        """
+        Draw several lines and squares in the range of allowed colors.
+        """
         for i in range(5 * len(self.colors)):
-            #shape = random.choice((0, 1))
             shape = random.random()
             if shape < .75:
                 self.drawLine(self.colors[i % len(self.colors)])
@@ -692,4 +734,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Twinkle, Rings, Spiral, Test, Zig, Droplets2, Pinwheel, Mondrian]
+    return [Mondrian]

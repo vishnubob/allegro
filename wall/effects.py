@@ -363,3 +363,5 @@ class FadeRotateEffect(RotateEffect):
         fi.run()
 
 Effects = [MatrixEffect, WindEffect, RotateEffect, FadeRotateEffect]
+import jesstess
+Effects.extend(jesstess.effects())
