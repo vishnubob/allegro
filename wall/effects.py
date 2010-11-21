@@ -11,6 +11,29 @@ class Effect(object):
     def _init(self, kw): pass
     def run(self): pass
 
+class TestEffect(Effect):
+    def _init(self, kw):
+        self.start_time = time.time()
+
+    def run(self):
+        while (time.time() - self.start_time) < 10:
+            hue = random.random()
+            for i in range(self.wall.width):
+                for j in range(self.wall.height):
+                    pixel = self.wall.pixel(i, j)
+                    pixel.hsv = (hue, 1, 1)
+            self.wall.draw()
+            time.sleep(1)
+            self.wall.clear()
+            hue = random.random()
+            for i in range(self.wall.height):
+                for j in range(self.wall.width):
+                    pixel = self.wall.pixel(j, i)
+                    pixel.hsv = (hue, 1, 1)
+                    self.wall.draw()
+                    time.sleep(.1)
+                    self.wall.clear()
+
 class MatrixEffect(Effect):
     class Column(object):
         def __init__(self):
@@ -63,7 +86,7 @@ class MatrixEffect(Effect):
             if not drawing:
                 timeout -= 1
             drawing = 0
-                    
+
 class WindEffect(Effect):
     class Wisp(object):
         def __init__(self, **kw):
@@ -106,7 +129,7 @@ class WindEffect(Effect):
                 draw_cnt += 1
                 pixel.hsv = (self.hue, 1, 1)
             return draw_cnt
-                    
+
     def _init(self, kw):
         self.direction = kw.get('direction', random.choice([-1, 1]))
         self.speed = kw.get('speed', random.random())
@@ -161,7 +184,7 @@ class WindEffect(Effect):
             if not drawing:
                 timeout -= 1
             drawing = 0
-    
+
 class RotateEffect(Effect):
     Left = (-1, 0)
     Right = (1, 0)
@@ -230,10 +253,10 @@ class RotateEffect(Effect):
         for pixel in cache:
             wall2 = wall.copy()
             wall2.pixel(pixel[0], pixel[1]).rgb = (0, 0, 0)
-            fi = FadeIter(wall, wall2, .001) 
+            fi = FadeIter(wall, wall2, .001)
             wall = wall2
             fi.run()
-            
+
     def map_rotate(self):
         self.movement = []
         # how many times to step in a direction
@@ -293,16 +316,11 @@ class FadeRotateEffect(RotateEffect):
             wall2 = wall.copy()
             for pixel in cache:
                 wall2.pixel(pixel[0], pixel[1]).hsv = (pixel[2], 1, 1)
-            fi = FadeIter(wall, wall2, ttl) 
+            fi = FadeIter(wall, wall2, ttl)
             fi.run()
             wall = wall2
         wall2 = wall.copy(True)
-        fi = FadeIter(wall, wall2, ttl) 
+        fi = FadeIter(wall, wall2, ttl)
         fi.run()
 
-Effects = [WindEffect, RotateEffect, MatrixEffect, FadeRotateEffect]
-import jesstess
-import smiley
-import adamf
-Effects.extend(smiley.effects())
-Effects.extend(jesstess.effects())
+Effects = [TestEffect]

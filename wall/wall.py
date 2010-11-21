@@ -6,29 +6,32 @@ from optparse import OptionParser
 
 # local imports
 from allegro import *
-from gui import Wall64_Visualizer
+from gui import Wall_Visualizer
 from motion import Watcher, DebugWatcher
 from effects import Effects
 
-class Wall64(object):
-    def __init__(self, chain, debug=False, gui=False, copy=False):
+class Wall(object):
+    def __init__(self, width, height, chain, debug=False, gui=False, copy=False):
         self.chain = chain
         self.debug = debug
+        self.width = width
+        self.height = height
+
         if not copy:
-            self.chain.length = 64
+            self.chain.length = self.width * self.height
             self.gui = None
             if gui:
-                self.gui = Wall64_Visualizer()
+                self.gui = Wall_Visualizer(self.width, self.height)
         else:
             self.gui = gui
-        
+
     def clear(self, draw=False):
         self.chain.clear(draw)
 
     def ascii(self):
         txt = ''
-        for y in range(8):
-            for x in range(8):
+        for y in range(self.height):
+            for x in range(self.width):
                 txt += self.pixel(x, y).ascii()
             txt += '\n'
         return txt
@@ -43,7 +46,7 @@ class Wall64(object):
         return self.__class__(chain2, self.debug, self.gui, True)
 
     def __len__(self):
-        return len(self.chain) 
+        return len(self.chain)
 
     def __iter__(self):
         return iter(self.chain)
@@ -51,22 +54,58 @@ class Wall64(object):
     def __getitem__(self, key):
         return self.chain[key]
 
-    def pixel(self, x, y, wrap=False, debug=False):
-        if wrap:
-            y = int(y) % 8
-            x = 7 - (int(x) % 8)
-        else:
-            if x < 0 or x > 7 or y < 0 or y > 7:
-                return None
-            x = 7 - int(x)
-            y = int(y)
+    def pixel(self, x, y, debug=False):
+        """
+        Turn x and y indices into a matrix into the corresponding pixel in the
+        linear chain that actually describes the lights.
+
+        The assumed light configuration is a snake, ie:
+
+        1 -- 2 -- 3
+                  |
+        6 -- 5 -- 4
+        |
+        7 -- 8 -- 9
+        """
         if debug:
             print "==>", x, y
-        if (y % 2):
-            pixel = (y * 8) + 7 - x
+
+        if x < 0 or x > self.width - 1 or y < 0 or y > self.height - 1:
+            return None
+
+        # Get the length of the snake corresponding to the full-width rectangle
+        # that sits above the pixel. Then add the remaining x length. This gives
+        # you the index into the physical light chain.
+        #
+        # For example, if this is your matrix:
+        #
+        # O O O
+        # O O O
+        # O X O
+        # O O O
+        #
+        # If X is the pixel we are dealing with, we were given x = 1, y = 2. The
+        # length of the snake corresponding to the full-width rectangle that
+        # sits above the pixel is the area of the * rectangle, minus 1:
+        #
+        # * * *     0 1 2
+        # * * *     5 4 3
+        # O X O ===>      == (3 x 2 - 1)
+        # O O O
+        #
+        # To finish the length of the snake, we need to know which direction the
+        # snake is going to get the remaining x length. In this example, the
+        # snake is curving right, so we get:
+        #
+        # 0 1 2
+        # 5 4 3
+        # 6 7
+        #
+        rectangle = self.width * y - 1
+        if y % 2:
+            return self.chain[rectangle + x + 1]
         else:
-            pixel = (y * 8) + x
-        return self.chain[pixel]
+            return self.chain[rectangle + self.width - x]
 
 class WatchAndEffect(object):
     def __init__(self, wall, nocam=False, effect_order="random"):
@@ -79,7 +118,7 @@ class WatchAndEffect(object):
         self.effect_order = effect_order
         if self.effect_order:
             self.current_effect = 0
-    
+
     def run(self):
         while 1:
             vector = self.watcher.vector()
@@ -118,7 +157,7 @@ class WatchAndEffect(object):
         else:
             print "Unknown effect order: choosing random"
             return random.choice(Effects)
-            
+
 def run(opts, args):
     if opts['dummy']:
         hwport = DummyPort(debug=opts['debug'])
@@ -126,7 +165,8 @@ def run(opts, args):
         hwport = Arduino(opts['port'], debug=opts['debug'])
         hwport.reset()
     chain = Chain(hwport, ack_flag=False)
-    wall = Wall64(chain, debug=opts['debug'], gui=opts['gui'])
+    wall = Wall(opts['width'], opts['height'], chain, debug=opts['debug'],
+                gui=opts['gui'])
     for clear_it in range(10):
         wall.clear(True)
         time.sleep(.1)
@@ -149,6 +189,8 @@ def get_args():
                         help="Disable crash protection")
     parser.add_option("-o", "--order", action="store", dest="effect_order",
                       help="Specify the effects order: one of 'random' or 'serial'")
+    parser.add_option("-w", "--width", action="store", help="Width of light wall")
+    parser.add_option("-t", "--height", action="store", help="Height of light wall")
 
     dport = '__unknown__'
     if sys.platform.startswith('linux'):
@@ -156,8 +198,13 @@ def get_args():
     elif sys.platform.startswith('darwin'):
         dport = '/dev/tty.usbserial-A800ewuP'
     parser.set_defaults(port=dport, debug=False, dummy=False, gui=False,
-                        crash=False, nocam=False, effect_order="random")
+                        crash=False, nocam=False, effect_order="random",
+                        width=8, height=8)
     (opts, args) = parser.parse_args()
+
+    opts.width = int(opts.width)
+    opts.height = int(opts.height)
+
     opts = eval(str(opts))
     return opts, args
 
