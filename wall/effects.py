@@ -116,15 +116,37 @@ class MatrixEffect(Effect):
 
 class WindEffect(Effect):
     class Wisp(object):
-        def __init__(self, **kw):
+        def __init__(self, wall, direction, on=False, **kw):
+            self.wall = wall
             self.cache = []
-            self._init(**kw)
+            # Tail must be at least 1 pixel
+            self.tail = kw.get('tail',
+                               max(1, random.randint(int(self.wall.width * .5),
+                                                     self.wall.width * 3)))
+            if on:
+                if direction == -1:
+                    x = self.wall.width - 1
+                else:
+                    x = 0
+                y = random.randint(0, self.wall.height - 1)
+            else:
+                if direction == -1:
+                    x = random.randint(self.wall.width, self.wall.width * 2)
+                else:
+                    x = random.randint(-self.wall.width, 0)
+                y = random.randint(-1, self.wall.height)
 
-        def _init(self, **kw):
-            self.tail = kw.get('tail', 0)
-            self.vector = kw.get('vector', (0.0, 0.0))
-            self.pos = kw.get('pos', [0.0, 0.0])
-            self.hue = kw.get('hue', 0.0)
+            self.pos = kw.get('pos', [x, y])
+            self.vector = kw.get('vector', (direction, 0))
+
+            self.hue = kw.get('hue', None)
+            if not self.hue:
+                if random.random() > .8:
+                    rgb = random.choice(([0,0,1], [0,1,0], [0,1,1], [1,0,0], [1,0,1], [1,1,0], [1,1,1]))
+                    hsv = colorsys.rgb_to_hsv(*rgb)
+                    self.hue = hsv[0]
+                else:
+                    self.hue = random.random()
 
         def __str__(self):
             ret = [self.pos, self.vector, self.tail, self.hue]
@@ -132,6 +154,10 @@ class WindEffect(Effect):
             return ret
 
         def step(self):
+            """
+            Advance the location of the head of the wisp and all pixels in the
+            tail.
+            """
             self.cache.append(map(int, self.pos))
             self.cache = self.cache[-self.tail:]
             if random.random() > .75:
@@ -144,6 +170,12 @@ class WindEffect(Effect):
                 self.pos = [self.pos[axis] + self.vector[axis] for axis in range(2)]
 
         def draw(self, wall):
+            """
+            Set the pixel colors in this wisp for this step.
+
+            Returns the number of pixels making up this wisp that were actually
+            within the scope of the wall.
+            """
             draw_cnt = 0
             for idx, pos in enumerate(self.cache):
                 pixel = wall.pixel(*pos)
@@ -161,44 +193,23 @@ class WindEffect(Effect):
         self.direction = kw.get('direction', random.choice([-1, 1]))
         self.speed = kw.get('speed', random.random())
 
-    def new_wisp(self, direction, on=False):
-        if on:
-            if direction == -1:
-                x = 7
-            else:
-                x = 0
-            y = random.randint(0, 7)
-        else:
-            if direction == -1:
-                x = random.randint(8, 16)
-            else:
-                x = random.randint(-8, 0)
-            y = random.randint(-1, 8)
-        wisp = self.Wisp()
-        wisp.pos = [x, y]
-        wisp.vector = (direction, 0)
-        if random.random() > .8:
-            rgb = random.choice(([0,0,1], [0,1,0], [0,1,1], [1,0,0], [1,0,1], [1,1,0], [1,1,1]))
-            hsv = colorsys.rgb_to_hsv(*rgb)
-            wisp.hue = hsv[0]
-        else:
-            wisp.hue = random.random()
-        wisp.tail = random.randint(5, 20)
-        return wisp
-
     def run(self):
         self.speed = max(.01, min(.125, self.speed))
         wisp_cnt = random.randint(3, 8)
         wisps = []
         for wisp_idx in range(wisp_cnt):
             if wisp_idx == wisp_cnt - 1:
-                wisp = self.new_wisp(self.direction, on=True)
+                wisp = self.Wisp(self.wall, self.direction, on=True)
             else:
-                wisp = self.new_wisp(self.direction)
+                wisp = self.Wisp(self.wall, self.direction)
             wisps.append(wisp)
         self.draw(wisps)
 
     def draw(self, wisps):
+        """
+        Draw the advancing wisps until no parts of any wisps are left on the
+        wall.
+        """
         timeout = 4
         drawing = 0
         while drawing or timeout:
@@ -350,4 +361,4 @@ class FadeRotateEffect(RotateEffect):
         fi = FadeIter(wall, wall2, ttl)
         fi.run()
 
-Effects = [MatrixEffect]
+Effects = [MatrixEffect, WindEffect]
