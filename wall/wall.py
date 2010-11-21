@@ -1,9 +1,6 @@
-import math
 import random
-import os
 import sys
 import time
-import copy
 import traceback
 from optparse import OptionParser
 
@@ -24,9 +21,6 @@ class Wall64(object):
                 self.gui = Wall64_Visualizer()
         else:
             self.gui = gui
-
-    def get_page(self):
-        chain = copy.copy(self.chain)
         
     def clear(self, draw=False):
         self.chain.clear(draw)

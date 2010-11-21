@@ -1,4 +1,3 @@
-import sys
 import arduino
 from struct import pack
 import time

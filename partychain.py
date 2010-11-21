@@ -39,9 +39,7 @@ class PartyChain(object):
         channel = random.choice([0, 1])
         runs = random.randint(10, 20)
         while runs:
-            color = random.randint(0, 2)
             ttl = 1
-            #self.chain2[channel][color] = 1023
             self.chain2[channel].set_rgb(self.random_color())
             fi = FadeIter(self.chain, self.chain2, ttl)
             fi.run()
@@ -56,8 +54,6 @@ class PartyChain(object):
         while runs:
             color = random.randint(0, 2)
             ttl = 1
-            #for led in self.chain2:
-                #led[color] = 1023
             for x in range(18):
                 self.chain2[x][color] = 1023
             print "chain"
@@ -72,29 +68,23 @@ class PartyChain(object):
 
     def make_red(self):
         self.chain.draw()
-        color = 0
         while 1:
             for x in range(1024):
                 self.chain.clear()
                 for led in self.chain:
                     led[0] = x
-                    #led[1] = x
-                    #led[2] = x
                 print self.chain
                 self.chain.draw()
 
     def hsv_rotate(self):
         offset = 0
         step = 1.0 / self.chain.length
-        sat_step = 1.0 / (self.chain.length / 2.0)
         self.chain2 = self.chain.copy(False)
         runs = random.randint(50, 100)
         while runs:
             for led in range(self.chain.length):
                 hue_led_offset = (led + offset) % self.chain.length
                 hue = step * (hue_led_offset + 1)
-                sat_led_offset = (led + offset) % (self.chain.length / 2.0)
-                sat = sat_step * (sat_led_offset + 1)
                 self.chain2[led].hsv = (hue, 1, 1)
             print self.chain
             print self.chain2

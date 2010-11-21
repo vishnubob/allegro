@@ -112,7 +112,6 @@ class WindEffect(Effect):
         self.speed = kw.get('speed', random.random())
 
     def new_wisp(self, direction, on=False):
-        vector = (direction, 0)
         if on:
             if direction == -1:
                 x = 7
@@ -217,7 +216,6 @@ class RotateEffect(Effect):
         hue_step = 1 / 64.0
         offset = random.random()
         cnt = 0
-        tail = 10
         cache = []
         for pixel in self.draw_list:
             x = pixel[0]
@@ -302,7 +300,6 @@ class FadeRotateEffect(RotateEffect):
         fi = FadeIter(wall, wall2, ttl) 
         fi.run()
 
-#Effects = []
 Effects = [WindEffect, RotateEffect, MatrixEffect, FadeRotateEffect]
 import jesstess
 import smiley
