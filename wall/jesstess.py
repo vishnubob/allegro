@@ -218,50 +218,6 @@ class Pinwheel(Effect):
             return False
         return True
 
-class Diamonds(Effect):
-    def _init(self, kw):
-        self.foreground = [elt for elt in itertools.product([1, 3, 5, 7], [0, 1, 2, 3, 4, 5, 6, 7])]
-        self.foreground.extend([elt for elt in itertools.product([0, 2, 4, 6], [1, 3, 5, 7])])
-
-    def color(self):
-        for x in range(0, 8):
-            for y in range(0, 8):
-                pixel = self.wall.pixel(x, y)
-                pixel.hsv = (self.bhue + .05 * y, 1, 1)
-
-        counter = 0
-        for dot in self.foreground:
-            pixel = self.wall.pixel(dot[0], dot[1])
-            pixel.hsv = (self.fhue + (counter % 8) * .01, 1, 1)
-            counter = counter + 1
-        self.wall.draw()
-
-        self.bhue = self.bhue + .01
-        self.fhue = self.fhue + .01
-
-
-    def shift(self):
-        new_foreground = []
-        for dot in self.foreground:
-            new_x = dot[0] + 1
-            if new_x > 7:
-                new_x = 0
-            new_y = dot[1] + 1
-            if new_y > 7:
-                new_y = 0
-            new_foreground.append((new_x, new_y))
-        self.foreground = new_foreground
-
-    def run(self):
-        self.fhue = random.random()
-        self.bhue = (self.fhue + .1) % 1
-
-        self.wall.draw()
-        for i in range(50):
-            self.shift()
-            self.color()
-            time.sleep(.5)
-
 class Letters(Effect):
     def run(self):
         color = random.random()
@@ -394,32 +350,6 @@ class Stars(Effect):
         self.shift(star_hue)
         time.sleep(.5)
         self.wall.clear()
-    
-class Ripple(Effect):
-    def _init(self, kw):
-        self.widths = [0 for x in range(0,8)]
-        self.directions = [1 for x in range(0,8)]
-        self.hue = random.random()
-
-    def run(self):
-        while True:
-            for y in range(0,8):
-                width = self.widths[y]
-                for x in range(3 - width, 3 + width + 1):
-                    pixel = self.wall.pixel(x, y)
-                    pixel.hsv = (self.hue, 1, 1)
-                    self.wall.draw()
-
-
-    def updateWidths(self):
-        for x in self.widths:
-            width = x + self.directions[x]
-            self.widths[x] = width
-            if width > 3:
-                self.direction[width] = -1
-            if width < 1:
-                self.direction[width] = 1
-
 
 class Droplets(Effect):
     class Droplet(object):
