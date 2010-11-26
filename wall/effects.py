@@ -11,6 +11,16 @@ class Effect(object):
     def _init(self, kw): pass
     def run(self): pass
 
+    @classmethod
+    def run_on_wall(cls, width, height):
+        """
+        Given a wall width and height, should this effect be run.
+
+        If you override this in a subclass, you must decorate the method with
+        @classmethod.
+        """
+        return True
+
 class TestEffect(Effect):
     def _init(self, kw):
         self.start_time = time.time()

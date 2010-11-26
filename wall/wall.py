@@ -113,15 +113,27 @@ class Wall(object):
             return self.chain[rectangle + self.width - x]
 
 class WatchAndEffect(object):
-    def __init__(self, wall, nocam=False, effect_order="random"):
+    def __init__(self, wall, nocam=False, effects=Effects, effect_order="random"):
+        """
+        wall: Wall object
+        nocam: boolean indicating if a camera is being used
+        effects: list of Effect objects
+        effect_order: string describing the order in which effects will be
+            displayed. The supported options are 'random' and 'serial'.
+        """
         self.wall = wall
         self.nocam = nocam
         if not self.nocam:
             self.watcher = Watcher()
         else:
             self.watcher = DebugWatcher()
+
+        # Filter out effects that won't run with this wall's dimensions.
+        self.effects = filter(lambda effect: effect.run_on_wall(
+                self.wall.width, self.wall.height), effects)
+
         self.effect_order = effect_order
-        if self.effect_order:
+        if self.effect_order == "serial":
             self.current_effect = 0
 
     def run(self):
@@ -152,16 +164,16 @@ class WatchAndEffect(object):
         Returns an Effect (sub)class based on the effect_order.
         """
         if self.effect_order == "serial":
-            effect = Effects[self.current_effect]
+            effect = self.effects[self.current_effect]
             self.current_effect += 1
-            if self.current_effect > len(Effects) - 1:
+            if self.current_effect > len(self.effects) - 1:
                 self.current_effect = 0
             return effect
         elif self.effect_order == "random":
-            return random.choice(Effects)
+            return random.choice(self.effects)
         else:
             print "Unknown effect order: choosing random"
-            return random.choice(Effects)
+            return random.choice(self.effects)
 
 def run(opts, args):
     if opts['dummy']:
