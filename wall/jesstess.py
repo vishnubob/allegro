@@ -88,7 +88,7 @@ class Mondrian(Effect):
         # wall.
         corner_x = random.randint(0, int(self.wall.width * .75))
         corner_y = random.randint(0, int(self.wall.height * .75))
-        
+
         for x in range(corner_x, corner_x + size + 1):
             for y in range(corner_y, corner_y + size + 1):
                 if x < self.wall.width and y < self.wall.height:
@@ -110,6 +110,14 @@ class Mondrian(Effect):
         time.sleep(1)
 
 class Pinwheel(Effect):
+    """
+    Mimics a rotating pinwheel.
+
+    Makes the largest square possible with an even-number length side
+    on the wall.
+
+    Minimum wall size: 2 x 2.
+    """
     class Triangle(object):
         def __init__(self, dot_list, wall):
             self.dot_list = dot_list
@@ -121,48 +129,71 @@ class Pinwheel(Effect):
                 pixel.hsv = (self.hue, 1, 1)
 
     def _init(self, kw):
-        self.tri1 = [(x, 0) for x in range(4)]
-        self.tri1.extend([(x, 1) for x in range(1, 4)])
-        self.tri1.extend([(x, 2) for x in range(2, 4)])
-        self.tri1.extend([(x, 3) for x in range(3, 4)])
-        
-        self.tri2 = [(x, 0) for x in range(4,8)]
-        self.tri2.extend([(x, 1) for x in range(4, 7)])
-        self.tri2.extend([(x, 2) for x in range(4, 6)])
-        self.tri2.extend([(x, 3) for x in range(4, 5)])
+        width = length = min(self.wall.width, self.wall.height)
 
-        self.s1 = [(x, 3) for x in range(5, 8)]
-        self.s1.extend([(x, 2) for x in range(6, 8)])
-        self.s1.extend([(x, 1) for x in range(7, 8)])
+        if width % 2:
+            # requires an even-number length side
+            width = width - 1
+            length = length - 1
 
-        self.s2 = [(x, 4) for x in range(5, 8)]
-        self.s2.extend([(x, 5) for x in range(6, 8)])
-        self.s2.extend([(x, 6) for x in range(7, 8)])
+        # Assign pixels to different triangles.
+        # 1 1 1 1 2 2 2 2
+        # 8 1 1 1 2 2 2 3
+        # 8 8 1 1 2 2 3 3
+        # 8 8 8 1 2 3 3 3
+        # 7 7 7 6 5 4 4 4
+        # 7 7 6 6 5 5 4 4
+        # 7 6 6 6 5 5 5 4
+        # 6 6 6 6 5 5 5 5
 
-        self.tri3 = [(x, 7) for x in range(4,8)]
-        self.tri3.extend([(x, 6) for x in range(4, 7)])
-        self.tri3.extend([(x, 5) for x in range(4, 6)])
-        self.tri3.extend([(x, 4) for x in range(4, 5)])
+        # Triangle 1
+        self.tri1 = []
+        for i in range(0, width/2):
+            self.tri1.extend([(x, i) for x in range(i, width/2)])
 
-        self.tri4 = [(x, 7) for x in range(4)]
-        self.tri4.extend([(x, 6) for x in range(1, 4)])
-        self.tri4.extend([(x, 5) for x in range(2, 4)])
-        self.tri4.extend([(x, 4) for x in range(3, 4)])
+        # Triangle 2
+        self.tri2 = []
+        for i in range(width/2):
+            self.tri2.extend([(x, i) for x in range(width/2, width - i)])
 
-        self.s3 = [(x, 4) for x in range(0,3)]
-        self.s3.extend([(x, 5) for x in range(0, 2)])
-        self.s3.extend([(x, 6) for x in range(0, 1)])
+        # Triangle 3
+        self.s1 = []
+        for i in range(width/2 - 1, 0, -1):
+            self.s1.extend([(x, i) for x in range(width - i, width)])
 
-        self.s4 = [(x, 3) for x in range(0, 3)]
-        self.s4.extend([(x, 2) for x in range(0, 2)])
-        self.s4.extend([(x, 1) for x in range(0, 1)])
+        # Triangle 4
+        self.s2 = []
+        for i in range(width/2 + 1, width):
+            self.s2.extend([(x, i - 1) for x in range(i, width)])
+
+        # Triangle 5
+        self.tri3 = []
+        for i in range(width, width/2, -1):
+            self.tri3.extend([(x, i - 1) for x in range(width/2, i)])
+
+        # Triangle 6
+        self.tri4 = []
+        for i in range(0, width/2):
+            self.tri4.extend([(x, width - 1 - i) for x in range(i, width/2)])
+
+        # Triangle 7
+        self.s3 = []
+        for i in range(width/2 - 1, 0, -1):
+            self.s3.extend([(x, width/2 + (width/2 - 1 - i)) for x in range(0, i)])
+
+        # Triangle 8
+        self.s4 = []
+        for i in range(width/2 - 1, 0, -1):
+            self.s4.extend([(x, i) for x in range(0, i)])
 
         self.triangles = []
-        for triangle in [self.tri1, self.tri2, self.s1, self.s2, self.tri3, self.tri4, self.s3, self.s4]:
+        for triangle in [self.tri1, self.tri2, self.s1, self.s2,
+                         self.tri3, self.tri4, self.s3, self.s4]:
             self.triangles.append(self.Triangle(triangle, self.wall))
 
         hue = random.random()
-        self.colors = [hue + i * .05 for i in range(4)]
+        # diagonal triangles have the same color
+        self.colors = [hue + i * .06 for i in range(4)]
         self.colors.extend(self.colors)
 
     def shift(self):
@@ -180,6 +211,12 @@ class Pinwheel(Effect):
     def run(self):
         for i in range(50):
             self.shift()
+
+    @classmethod
+    def run_on_wall(cls, width, height):
+        if width < 2 or height < 2:
+            return False
+        return True
 
 class Diamonds(Effect):
     def _init(self, kw):
@@ -734,4 +771,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Mondrian]
+    return [Mondrian, Pinwheel]
