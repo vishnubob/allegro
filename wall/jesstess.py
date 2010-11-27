@@ -620,34 +620,39 @@ class Spiral(Effect):
             return False
         return True
 
-class Test(Effect):
-    def _init(self, kw):
-        self.flow = 0
-        self.v = [0.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5, 0.0]
-        self.hue = random.random()
-        self.start_time = time.time()
-
+class Rainbow(Effect):
     def run(self):
-        while (time.time() - self.start_time) < 10:
-            for i in range(7, -1, -1):
-                for j in range(7, -1, -1):
+        hue = random.random()
+        hue_spacing = 1.0/(self.wall.width * self.wall.height)
+        delay = .1
+        start_time = time.time()
+
+        while (time.time() - start_time) < 5:
+            for i in range(self.wall.width - 1, -1, -1):
+                for j in range(self.wall.height - 1, -1, -1):
                     pixel = self.wall.pixel(i, j)
-                    pixel.hsv = (self.hue, 1, 1)
-                    self.hue += .015
-                time.sleep(.15)
+                    pixel.hsv = (hue, 1, 1)
+                    hue += hue_spacing
+                time.sleep(delay)
                 self.wall.draw()
 
             self.wall.clear()
             
-            for i in range(0,8):
-                for j in range(0,8):
+            for i in range(0, self.wall.width):
+                for j in range(0, self.wall.height):
                     pixel = self.wall.pixel(i, j)
-                    pixel.hsv = (self.hue, 1, 1)
-                    self.hue -= .015
-                time.sleep(.15)
+                    pixel.hsv = (hue, 1, 1)
+                    hue -= hue_spacing
+                time.sleep(delay)
                 self.wall.draw()
 
             self.wall.clear()
 
+    @classmethod
+    def run_on_wall(cls, width, height):
+        if width < 4:
+            return False
+        return True
+
 def effects():
-    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain, Rings, Spiral]
+    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain, Rings, Spiral, Rainbow]
