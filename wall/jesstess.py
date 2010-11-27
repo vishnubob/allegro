@@ -222,7 +222,7 @@ class Letters(Effect):
     """
     Cycle through the letters of the alphabet.
 
-    Requires at least an 8 x 8 wall.
+    Minimum wall size: 8 x 8.
     """
     def run(self):
         color = random.random()
@@ -256,37 +256,56 @@ class Letters(Effect):
             return False
         return True
 
-class Zig(Effect):
-    class Pixel(object):
+class Bounce(Effect):
+    """
+    3 balls bounce around.
+
+    Minimum wall size: 4 x 4.
+    """
+    class Ball(object):
         def __init__(self, wall, hue):
             self.wall = wall
             self.hue = hue
-            self.x = random.choice((0, 7))
-    
+            self.x = random.choice((0, self.wall.width - 1))
+
             if self.x:
                 self.horiz = 0 # left
             else:
                 self.horiz = 1 # right
-    
+
             self.vert = random.choice((0, 1)) # 1 = up
-            self.y = random.randint(0, 7)
+            self.y = random.randint(0, self.wall.height - 1)
             self.tail = []
-    
-        def displayPixel(self):
+
+        def display_ball(self):
+            """
+            Draw the ball and its tail.
+            """
             pixel = self.wall.pixel(self.x, self.y)
             pixel.hsv = (self.hue, 1, 1)
-            intensity = 1.0
-            for elt in self.tail:
-                intensity = intensity - .3
+
+            # To avoid flicker, the wall is never cleared, and instead the last
+            # pixel in the tail is always black, so as the ball moves the tail
+            # erases itself.
+            intensities = [.75, .5, .25, 0]
+            for i in range(len(self.tail)):
+                elt = self.tail[i]
                 pixel = self.wall.pixel(elt[0], elt[1])
-                pixel.hsv = (self.hue, 1, intensity)
+                pixel.hsv = (self.hue, 1, intensities[i])
             self.wall.draw()
-            
-        def movePixel(self):
+
+        def move_ball(self):
+            """
+            Move the ball and its tail along its line of motion (always of slope
+            +- 1).
+            """
+            # Update the tail.
             self.tail.insert(0, (self.x, self.y))
-            if len(self.tail) > 3:
+            if len(self.tail) > 4:
                 self.tail.pop()
 
+            # If it's in the middle of the wall, keep heading in the current
+            # direction.
             if self.horiz:
                 self.x = self.x + 1
             else:
@@ -295,24 +314,25 @@ class Zig(Effect):
                 self.y = self.y + 1
             else:
                 self.y = self.y - 1
-    
-            if self.x > 7:
+
+            # If it has hit a wall, bounce off the wall.
+            if self.x > self.wall.width - 1:
                 self.horiz = 0
-                self.x = 6
+                self.x = self.wall.width - 2
             if self.x < 0:
                 self.x = 1
                 self.horiz = 1
-            if self.y > 7:
-                self.y = 6
+            if self.y > self.wall.height - 1:
+                self.y = self.wall.height - 2
                 self.vert = 0
             if self.y < 0:
                 self.y = 1
                 self.vert = 1
 
         def move(self):
-            self.displayPixel()
-            self.movePixel()
-        
+            self.display_ball()
+            self.move_ball()
+
     def run(self):
         master_hue = random.random()
         pixels = []
@@ -321,13 +341,20 @@ class Zig(Effect):
         while time.time() - start_time < 10:
             for pixel in pixels:
                 pixel.move()
-            time.sleep(.2)
-            self.wall.clear()
-            
-            if counter == 0 and len(pixels) < 3:
-                pixels.append(self.Pixel(self.wall, master_hue + .1 * len(pixels)))
+            time.sleep(.1)
+
+            # Space out when the balls appear.
+            if counter % 4 == 0 and len(pixels) < 3:
+                # The balls' colors rotate around the color wheel.
+                pixels.append(
+                    self.Ball(self.wall, master_hue + .15 * len(pixels)))
             counter = counter + 1
-            counter = counter % 4
+
+    @classmethod
+    def run_on_wall(cls, width, height):
+        if width < 4 or height < 4:
+            return False
+        return True
 
 class Stars(Effect):
     def _init(self, kw):
@@ -727,4 +754,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Mondrian, Pinwheel]
+    return [Mondrian, Pinwheel, Bounce]
