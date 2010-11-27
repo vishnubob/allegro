@@ -219,17 +219,43 @@ class Pinwheel(Effect):
         return True
 
 class Letters(Effect):
+    """
+    Cycle through the letters of the alphabet.
+
+    Requires at least an 8 x 8 wall.
+    """
     def run(self):
         color = random.random()
         foreground = (color, 1, 1)
         background = ((color + .5) % 1, 1, 1)
 
+        # Center the letters on the wall
+        x_offset = int((self.wall.width - 8) / 2)
+        y_offset = int((self.wall.height - 8) / 2)
+
         for ord in range(65, 123):
             self.wall.clear()
-            ascii8x8.draw_chr(chr(ord), self.wall, foreground, background)
+
+            # Color everything with the background color
+            for i in range(self.wall.width):
+                for j in range(self.wall.height):
+                    self.wall.pixel(i, j).hsv = background
+
+            # Color the foreground letter
+            ascii8x8.draw_chr(chr(ord), self.wall, foreground, background,
+                              x_offset=x_offset, y_offset=y_offset)
             self.wall.draw()
-            time.sleep(1)
-    
+            time.sleep(.2)
+
+    @classmethod
+    def run_on_wall(cls, width, height):
+        """
+        The ascii8x8 library requires at least an 8 x 8 wall.
+        """
+        if width < 8 or height < 8:
+            return False
+        return True
+
 class Zig(Effect):
     class Pixel(object):
         def __init__(self, wall, hue):
