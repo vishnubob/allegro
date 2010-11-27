@@ -20,16 +20,18 @@ class Mondrian(Effect):
 
         color: a 3-element tuple of hsv values
         """
-        vert = random.choice((0, 1))
+        x_max = self.wall.width - 1
+        y_max = self.wall.height - 1
 
+        vert = random.choice((0, 1))
         if vert:
             # The line starts at either the top or bottom of the wall.
-            x = random.randint(0, self.wall.width - 1)
-            y = random.choice((0, self.wall.height - 1))
+            x = random.randint(0, x_max)
+            y = random.choice((0, y_max))
         else:
             # The line starts at either the left or right side of the wall.
-            x = random.choice((0, self.wall.width - 1))
-            y = random.randint(0, self.wall.height - 1)
+            x = random.choice((0, x_max))
+            y = random.randint(0, y_max)
 
         if vert and y:
             # Vertical line drawn up
@@ -315,15 +317,18 @@ class Bounce(Effect):
             else:
                 self.y = self.y - 1
 
+            x_max = self.wall.width - 1
+            y_max = self.wall.height - 1
+
             # If it has hit a wall, bounce off the wall.
-            if self.x > self.wall.width - 1:
+            if self.x > x_max:
                 self.horiz = 0
-                self.x = self.wall.width - 2
+                self.x = x_max - 1
             if self.x < 0:
                 self.x = 1
                 self.horiz = 1
-            if self.y > self.wall.height - 1:
-                self.y = self.wall.height - 2
+            if self.y > y_max:
+                self.y = y_max - 1
                 self.vert = 0
             if self.y < 0:
                 self.y = 1
@@ -410,7 +415,7 @@ class Twinkle(Effect):
             time.sleep(.1)
             self.wall.clear()
 
-class Droplets2(Effect):
+class Rain(Effect):
     class Droplet(object):
         def __init__(self, wall, droplets):
             self.wall = wall
@@ -421,12 +426,6 @@ class Droplets2(Effect):
             self.decaying = False
             self.on = False
             self.hue = random.random()
-
-        def setX(self, x):
-            self.x = x
-
-        def setY(self, y):
-            self.y = y
 
         def splash(self, decay, hue):
             if not self.on:
@@ -458,11 +457,11 @@ class Droplets2(Effect):
             below = above = left = right = None
             if self.x != 0:
                 left = self.droplets[self.x - 1][self.y]
-            if self.x != len(self.droplets[0]) - 1:
+            if self.x != len(self.droplets) - 1:
                 right = self.droplets[self.x + 1][self.y]
             if self.y != 0:
                 above = self.droplets[self.x][self.y - 1]
-            if self.y != len(self.droplets) - 1:
+            if self.y != len(self.droplets[0]) - 1:
                 below = self.droplets[self.x][self.y + 1]
 
             changers = filter(lambda x: x != None, [below, above, left, right])
@@ -471,20 +470,20 @@ class Droplets2(Effect):
 
     def _init(self, kw):
         self.droplets = []
-        for x in range(0,8):
-            row = [self.Droplet(self.wall, self.droplets) for x in range(0,8)]
-            self.droplets.append(row)
+        for x in range(0, self.wall.width):
+            col = [self.Droplet(self.wall, self.droplets) for x in range(0, self.wall.height)]
+            self.droplets.append(col)
 
         for x in range(len(self.droplets)):
             for y in range(len(self.droplets[0])):
-                self.droplets[x][y].setX(x)
-                self.droplets[x][y].setY(y)
+                self.droplets[x][y].x = x
+                self.droplets[x][y].y = y
 
     def run(self):
         start_time = time.time()
         while time.time() - start_time < 10:
-            for i in range(0, 8):
-                for j in range(0,8):
+            for i in range(0, self.wall.width):
+                for j in range(0, self.wall.height):
                     self.droplets[i][j].drop()
             self.wall.draw()
             time.sleep(.1)
@@ -620,4 +619,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Mondrian, Pinwheel, Bounce, Twinkle]
+    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain]
