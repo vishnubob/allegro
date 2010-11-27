@@ -445,7 +445,7 @@ class Rain(Effect):
             if random.random() > .995:
                 self.on = True
                 self.decay = 10
-        
+
         def decay_light(self):
             if self.on:
                 self.decay = self.decay - 1
@@ -508,7 +508,7 @@ class Rings(Effect):
 
         def x(self):
             return self.location[0]
-        
+
         def y(self):
             return self.location[1]
 
@@ -536,7 +536,7 @@ class Rings(Effect):
             x_max = x_max - 1
             y_min = y_min + 1
             y_max = y_max - 1
-        
+
     def run(self):
         self.wall.clear()
         hue = random.random()
@@ -557,12 +557,17 @@ class Rings(Effect):
         return True
 
 class Spiral(Effect):
+    """
+    A dot with a tail spirals into the center of the wall, shifting colors as it
+    moves.
+
+    Minimum wall size: 3 x 3.
+    """
     def _init(self, kw):
         self.hue = random.random()
         self.tail = []
 
     def draw(self, x, y):
-
         self.tail.insert(0, (x, y))
         if len(self.tail) > 4:
             self.tail.pop()
@@ -583,25 +588,38 @@ class Spiral(Effect):
 
     def run(self):
         x_min = 0
-        x_max = 7
+        x_max = self.wall.width - 1
         y_min = 0
-        y_max = 7
+        y_max = self.wall.height - 1
 
-        while x_max > x_min:
+        while x_max >= x_min and y_max >= y_min:
             for x in range(x_min, x_max + 1):
                 self.draw(x, y_min)
             for y in range(y_min, y_max + 1):
                 self.draw(x_max, y)
-            for x in range(x_max, x_min - 1, -1):
-                self.draw(x, y_max)
-            for y in range(y_max, y_min, -1):
-                self.draw(x_min, y)
+
+            # If the wall dimensions are odd, the final rectangle outlined is
+            # just a line, so skip drawing the final side of the rectangle,
+            # which would otherwise look like the spiral starting to go
+            # backwards.
+            if y_max != y_min:
+                for x in range(x_max, x_min - 1, -1):
+                    self.draw(x, y_max)
+            if x_max != x_min:
+                for y in range(y_max, y_min, -1):
+                    self.draw(x_min, y)
 
             x_min = x_min + 1
             x_max = x_max - 1
             y_min = y_min + 1
             y_max = y_max - 1
-    
+
+    @classmethod
+    def run_on_wall(cls, width, height):
+        if width < 3 or height < 3:
+            return False
+        return True
+
 class Test(Effect):
     def _init(self, kw):
         self.flow = 0
@@ -632,4 +650,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain, Rings]
+    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain, Rings, Spiral]
