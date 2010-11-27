@@ -1,11 +1,21 @@
-def draw_chr(ch, wall, foreground, background):
+def draw_chr(ch, wall, foreground, background, x_offset=0, y_offset=0):
+    """
+    Draw an 8 x 8 ASCII character.
+
+    ch: the ASCII integer for a character
+    wall: Wall object
+    foreground: a 3-element tuple of hsv values
+    background: a 3-element tuple of hsv values
+    x_offset: integer
+    y_offset: integer
+    """
     font = Font8x8[ord(ch)]
     for Y, row in enumerate(font):
         for X, col in enumerate(row):
             if col == '#': 
-                wall.pixel(X, Y).hsv = background
+                wall.pixel(X + x_offset, Y + y_offset).hsv = background
             else:
-                wall.pixel(X, Y).hsv = foreground
+                wall.pixel(X + x_offset, Y + y_offset).hsv = foreground
 
 Font8x8 = (
   (
