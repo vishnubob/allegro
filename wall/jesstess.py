@@ -358,38 +358,47 @@ class Bounce(Effect):
 
 class Twinkle(Effect):
     class Star(object):
+        """
+        The life of a Star:
+
+        1. Try to turn on.
+        2. If you're on, shine with an intensity that decays over time.
+        """
         def __init__(self, wall, x, y):
             self.wall = wall
             self.x = x
             self.y = y
             self.decay = 0
             self.on = False
+            # Stick to blueish colors.
             self.hue = .65 + random.uniform(-1, 1) * .15
-            
 
         def twinkle(self):
-            self.tryOn()
+            self.try_on()
             if self.on:
                 pixel = self.wall.pixel(self.x, self.y)
                 pixel.hsv = (self.hue, 1, self.decay*.1)
-            self.decayLight()
+            self.decay_light()
 
-        def tryOn(self):
+        def try_on(self):
             if random.random() > .95:
                 self.on = True
                 self.decay = 10
-        
-        def decayLight(self):
+
+        def decay_light(self):
             if self.on:
                 self.decay = self.decay - 1
 
             if self.decay == 0:
                 self.on = False
-            
+
     def _init(self, kw):
+        """
+        Every pixel is a star.
+        """
         self.stars = []
-        for x in range(0,8):
-            for y in range(0,8):
+        for x in range(0, self.wall.width):
+            for y in range(0, self.wall.height):
                 self.stars.append(self.Star(self.wall, x, y))
 
     def run(self):
@@ -426,19 +435,19 @@ class Droplets2(Effect):
                 self.hue = hue
 
         def drop(self):
-            self.tryOn()
+            self.try_on()
             if self.on:
                 pixel = self.wall.pixel(self.x, self.y)
                 pixel.hsv = (self.hue, 1, self.decay * .1)
                 self.spread()
-            self.decayLight()
+            self.decay_light()
 
-        def tryOn(self):
+        def try_on(self):
             if random.random() > .995:
                 self.on = True
                 self.decay = 10
         
-        def decayLight(self):
+        def decay_light(self):
             if self.on:
                 self.decay = self.decay - 1
 
@@ -611,4 +620,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Mondrian, Pinwheel, Bounce]
+    return [Mondrian, Pinwheel, Bounce, Twinkle]
