@@ -117,7 +117,7 @@ class WatchAndEffect(object):
         """
         wall: Wall object
         nocam: boolean indicating if a camera is being used
-        effects: list of Effect objects
+        effects: list of Effect classes
         effect_order: string describing the order in which effects will be
             displayed. The supported options are 'random' and 'serial'.
         """
@@ -131,6 +131,11 @@ class WatchAndEffect(object):
         # Filter out effects that won't run with this wall's dimensions.
         self.effects = filter(lambda effect: effect.run_on_wall(
                 self.wall.width, self.wall.height), effects)
+
+        if not len(self.effects):
+            print "None of the provided effects can run on this %d x %d wall." % (
+                self.wall.width, self.wall.height)
+            sys.exit(1)
 
         self.effect_order = effect_order
         if self.effect_order == "serial":
