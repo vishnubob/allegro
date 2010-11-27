@@ -489,8 +489,12 @@ class Rain(Effect):
             time.sleep(.1)
             self.wall.clear()
 
-
 class Rings(Effect):
+    """
+    Draw concentric circles in shifting colors.
+
+    Minimum wall size: 5 x 5.
+    """
     class RingElement(object):
         def __init__(self, location):
             self.location = location
@@ -510,12 +514,13 @@ class Rings(Effect):
 
     def _init(self, kw):
         x_min = 0
-        x_max = 7
+        x_max = self.wall.width - 1
         y_min = 0
-        y_max = 7
+        y_max = self.wall.height - 1
 
-        self.rings = [[], [], [], []]
-        for ring in self.rings:
+        self.rings = []
+        for i in range(int(min(x_max, y_max) / 2) + 1):
+            ring = []
             for x in range(x_min, x_max + 1):
                 ring.append(self.RingElement((x, y_min)))
             for y in range(y_min, y_max + 1):
@@ -524,6 +529,8 @@ class Rings(Effect):
                 ring.append(self.RingElement((x, y_max)))
             for y in range(y_max, y_min, -1):
                 ring.append(self.RingElement((x_min, y)))
+
+            self.rings.append(ring)
 
             x_min = x_min + 1
             x_max = x_max - 1
@@ -542,6 +549,12 @@ class Rings(Effect):
                 self.wall.draw()
                 time.sleep(.2)
                 hue = hue + .1
+
+    @classmethod
+    def run_on_wall(cls, width, height):
+        if width < 5 or height < 5:
+            return False
+        return True
 
 class Spiral(Effect):
     def _init(self, kw):
@@ -619,4 +632,4 @@ class Test(Effect):
             self.wall.clear()
 
 def effects():
-    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain]
+    return [Mondrian, Pinwheel, Bounce, Twinkle, Rain, Rings]
