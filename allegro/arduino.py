@@ -1,4 +1,3 @@
-import serial
 import time
 
 class DummyPort(object):
@@ -36,6 +35,7 @@ class DummyPort(object):
 
 class Arduino:
     def __init__(self, port, baud=115200, debug=False):
+        import serial
         self.debug = debug
         self.port = serial.Serial(port, baud)
         
